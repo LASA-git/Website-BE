@@ -1,0 +1,54 @@
+const OpenAI = require("openai");
+const { env } = require("../config/env");
+
+const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+
+const buildFlyerPrompt = (event) => {
+  const dateLabel = event.startDate
+    ? new Date(event.startDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      })
+    : "";
+
+  const timeLabel = event.startDate
+    ? new Date(event.startDate).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit"
+      })
+    : "";
+
+  const parts = [
+    "Create a simple, modern, minimal event flyer.",
+    "Use clean typography and generous whitespace.",
+    "No logos or branding.",
+    `Title: ${event.title}.`,
+    event.description ? `Description: ${event.description}.` : "",
+    event.location ? `Venue: ${event.location}.` : "",
+    dateLabel ? `Date: ${dateLabel}.` : "",
+    timeLabel ? `Time: ${timeLabel}.` : ""
+  ].filter(Boolean);
+
+  return parts.join(" ");
+};
+
+const generateFlyerImages = async (event) => {
+  if (!env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not set");
+  }
+
+  const prompt = buildFlyerPrompt(event);
+
+  const response = await client.images.generate({
+    model: "gpt-image-2",
+    prompt,
+    size: "1024x1280",
+    quality: "high",
+    n: 2
+  });
+
+  return (response.data || []).map((item) => item.b64_json).filter(Boolean);
+};
+
+module.exports = { generateFlyerImages };
