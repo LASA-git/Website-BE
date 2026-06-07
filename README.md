@@ -30,3 +30,6 @@ Express + MongoDB backend for LASA, modeled after CMV with a simplified feature 
 - Current-year events show on the Events page.
 - Any event from prior years appears under Archived.
 - Event end date is auto-set to Dec 31 of the start year.
+- `startDate` must be sent as `YYYY-MM-DD` (date only).
+- Event dates are normalized and stored using UTC date semantics.
+- Event APIs return `startDate` and `endDate` as date-only strings (`YYYY-MM-DD`) to avoid timezone day shifts.

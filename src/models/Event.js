@@ -1,4 +1,9 @@
 const mongoose = require("mongoose");
+const {
+  formatDateOnlyUTC,
+  getCurrentUTCYear,
+  getYearEndUTC
+} = require("../utils/dateUtils");
 
 const eventSchema = new mongoose.Schema(
   {
@@ -23,8 +28,8 @@ eventSchema.pre("validate", function setDerivedDates(next) {
   }
 
   const start = new Date(this.startDate);
-  const year = start.getFullYear();
-  const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+  const year = start.getUTCFullYear();
+  const endDate = getYearEndUTC(year);
 
   this.eventYear = year;
   this.endDate = endDate;
@@ -33,12 +38,30 @@ eventSchema.pre("validate", function setDerivedDates(next) {
 });
 
 eventSchema.virtual("isArchived").get(function isArchived() {
-  const currentYear = new Date().getFullYear();
+  const currentYear = getCurrentUTCYear();
   return this.eventYear < currentYear;
 });
 
-eventSchema.set("toJSON", { virtuals: true });
+const normalizeDateFields = (_doc, ret) => {
+  if (ret.startDate) {
+    ret.startDate = formatDateOnlyUTC(ret.startDate);
+  }
 
-eventSchema.set("toObject", { virtuals: true });
+  if (ret.endDate) {
+    ret.endDate = formatDateOnlyUTC(ret.endDate);
+  }
+
+  return ret;
+};
+
+eventSchema.set("toJSON", {
+  virtuals: true,
+  transform: normalizeDateFields
+});
+
+eventSchema.set("toObject", {
+  virtuals: true,
+  transform: normalizeDateFields
+});
 
 module.exports = mongoose.model("Event", eventSchema);

@@ -1,13 +1,14 @@
 const { z } = require("zod");
+const { parseDateOnlyToUtcDate } = require("../utils/dateUtils");
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/);
 const emptyToUndefined = (value) => (value === "" ? undefined : value);
 const optionalUrl = z.preprocess(emptyToUndefined, z.string().url().optional());
-const optionalDate = z.preprocess((value) => {
+const dateOnlyToUtcDate = z.preprocess((value) => {
   if (value === undefined || value === null || value === "") {
     return value;
   }
-  return value instanceof Date ? value : new Date(value);
+  return parseDateOnlyToUtcDate(value);
 }, z.date());
 
 const createEventSchema = z.object({
@@ -15,7 +16,7 @@ const createEventSchema = z.object({
     title: z.string().min(2),
     description: z.string().optional(),
     location: z.string().optional(),
-    startDate: optionalDate,
+    startDate: dateOnlyToUtcDate,
     coverImageUrl: optionalUrl,
     gallery: z.array(z.string().url()).optional(),
     flyerUrl: optionalUrl
@@ -28,7 +29,7 @@ const updateEventSchema = z.object({
     title: z.string().min(2).optional(),
     description: z.string().optional(),
     location: z.string().optional(),
-    startDate: optionalDate.optional(),
+    startDate: dateOnlyToUtcDate.optional(),
     coverImageUrl: optionalUrl,
     gallery: z.array(z.string().url()).optional(),
     flyerUrl: optionalUrl

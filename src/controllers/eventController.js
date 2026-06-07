@@ -1,50 +1,46 @@
 const Event = require("../models/Event");
 const { asyncHandler } = require("../utils/asyncHandler");
+const {
+  getCurrentUTCYear,
+  getStartOfUTCToday,
+  getYearEndUTC
+} = require("../utils/dateUtils");
 const { generateFlyerImages } = require("../services/flyerService");
 const { uploadPublicObject } = require("../services/s3Service");
 
-const getCurrentYear = () => new Date().getFullYear();
-const getStartOfToday = () => {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-};
-
 const listCurrentYearEvents = asyncHandler(async (req, res) => {
-  const currentYear = getCurrentYear();
+  const currentYear = getCurrentUTCYear();
 
   const events = await Event.find({ eventYear: currentYear })
-    .sort({ startDate: -1 })
-    .lean();
+    .sort({ startDate: -1 });
 
   return res.json({ events });
 });
 
 const listArchivedEvents = asyncHandler(async (req, res) => {
-  const currentYear = getCurrentYear();
+  const currentYear = getCurrentUTCYear();
 
   const events = await Event.find({ eventYear: { $lt: currentYear } })
-    .sort({ startDate: -1 })
-    .lean();
+    .sort({ startDate: -1 });
 
   return res.json({ events });
 });
 
 const listActiveEvents = asyncHandler(async (req, res) => {
-  const currentYear = getCurrentYear();
-  const todayStart = getStartOfToday();
+  const currentYear = getCurrentUTCYear();
+  const todayStart = getStartOfUTCToday();
 
   const events = await Event.find({
     eventYear: currentYear,
     startDate: { $gte: todayStart }
   })
-    .sort({ startDate: 1 })
-    .lean();
+    .sort({ startDate: 1 });
 
   return res.json({ events });
 });
 
 const getEventById = asyncHandler(async (req, res) => {
-  const event = await Event.findById(req.validated.params.id).lean();
+  const event = await Event.findById(req.validated.params.id);
   if (!event) {
     return res.status(404).json({ message: "Event not found" });
   }
@@ -69,9 +65,9 @@ const updateEvent = asyncHandler(async (req, res) => {
 
   if (payload.startDate) {
     const start = new Date(payload.startDate);
-    const year = start.getFullYear();
+    const year = start.getUTCFullYear();
     payload.eventYear = year;
-    payload.endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+    payload.endDate = getYearEndUTC(year);
   }
 
   const event = await Event.findByIdAndUpdate(id, payload, {

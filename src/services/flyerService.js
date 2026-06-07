@@ -1,23 +1,11 @@
 const OpenAI = require("openai");
 const { env } = require("../config/env");
+const { formatDateOnlyUTC } = require("../utils/dateUtils");
 
 const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
 const buildFlyerPrompt = (event) => {
-  const dateLabel = event.startDate
-    ? new Date(event.startDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-      })
-    : "";
-
-  const timeLabel = event.startDate
-    ? new Date(event.startDate).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit"
-      })
-    : "";
+  const dateLabel = event.startDate ? formatDateOnlyUTC(event.startDate) : "";
 
   const parts = [
     "Create a simple, modern, minimal event flyer.",
@@ -26,8 +14,7 @@ const buildFlyerPrompt = (event) => {
     `Title: ${event.title}.`,
     event.description ? `Description: ${event.description}.` : "",
     event.location ? `Venue: ${event.location}.` : "",
-    dateLabel ? `Date: ${dateLabel}.` : "",
-    timeLabel ? `Time: ${timeLabel}.` : ""
+    dateLabel ? `Date: ${dateLabel}.` : ""
   ].filter(Boolean);
 
   return parts.join(" ");
