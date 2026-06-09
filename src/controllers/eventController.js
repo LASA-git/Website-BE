@@ -1,9 +1,11 @@
 const Event = require("../models/Event");
 const { asyncHandler } = require("../utils/asyncHandler");
 const {
+  normalizeDateOnlyString,
+  getCurrentUTCDateString,
   getCurrentUTCYear,
-  getStartOfUTCToday,
-  getYearEndUTC
+  getYearFromDateOnlyString,
+  getYearEndDateString
 } = require("../utils/dateUtils");
 const { generateFlyerImages } = require("../services/flyerService");
 const { uploadPublicObject } = require("../services/s3Service");
@@ -28,11 +30,11 @@ const listArchivedEvents = asyncHandler(async (req, res) => {
 
 const listActiveEvents = asyncHandler(async (req, res) => {
   const currentYear = getCurrentUTCYear();
-  const todayStart = getStartOfUTCToday();
+  const today = getCurrentUTCDateString();
 
   const events = await Event.find({
     eventYear: currentYear,
-    startDate: { $gte: todayStart }
+    startDate: { $gte: today }
   })
     .sort({ startDate: 1 });
 
@@ -64,10 +66,18 @@ const updateEvent = asyncHandler(async (req, res) => {
   const payload = req.validated.body;
 
   if (payload.startDate) {
-    const start = new Date(payload.startDate);
-    const year = start.getUTCFullYear();
+    const startDate = normalizeDateOnlyString(payload.startDate);
+    if (!startDate) {
+      return res.status(400).json({
+        message: "startDate must be a valid date in YYYY-MM-DD format"
+      });
+    }
+
+    const year = getYearFromDateOnlyString(startDate);
+
+    payload.startDate = startDate;
     payload.eventYear = year;
-    payload.endDate = getYearEndUTC(year);
+    payload.endDate = getYearEndDateString(year);
   }
 
   const event = await Event.findByIdAndUpdate(id, payload, {

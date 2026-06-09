@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const {
-  formatDateOnlyUTC,
+  isDateOnlyString,
+  normalizeDateOnlyString,
   getCurrentUTCYear,
-  getYearEndUTC
+  getYearFromDateOnlyString,
+  getYearEndDateString
 } = require("../utils/dateUtils");
 
 const eventSchema = new mongoose.Schema(
@@ -10,8 +12,24 @@ const eventSchema = new mongoose.Schema(
     title: { type: String, trim: true, required: true },
     description: { type: String, trim: true },
     location: { type: String, trim: true },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
+    startDate: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: {
+        validator: isDateOnlyString,
+        message: "startDate must be in YYYY-MM-DD format"
+      }
+    },
+    endDate: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: {
+        validator: isDateOnlyString,
+        message: "endDate must be in YYYY-MM-DD format"
+      }
+    },
     eventYear: { type: Number, required: true },
     coverImageUrl: { type: String, trim: true },
     gallery: [{ type: String, trim: true }],
@@ -27,10 +45,16 @@ eventSchema.pre("validate", function setDerivedDates(next) {
     return next();
   }
 
-  const start = new Date(this.startDate);
-  const year = start.getUTCFullYear();
-  const endDate = getYearEndUTC(year);
+  const normalizedStartDate = normalizeDateOnlyString(this.startDate);
+  if (!normalizedStartDate) {
+    this.invalidate("startDate", "startDate must be a valid date in YYYY-MM-DD format");
+    return next();
+  }
 
+  const year = getYearFromDateOnlyString(normalizedStartDate);
+  const endDate = getYearEndDateString(year);
+
+  this.startDate = normalizedStartDate;
   this.eventYear = year;
   this.endDate = endDate;
 
@@ -42,26 +66,12 @@ eventSchema.virtual("isArchived").get(function isArchived() {
   return this.eventYear < currentYear;
 });
 
-const normalizeDateFields = (_doc, ret) => {
-  if (ret.startDate) {
-    ret.startDate = formatDateOnlyUTC(ret.startDate);
-  }
-
-  if (ret.endDate) {
-    ret.endDate = formatDateOnlyUTC(ret.endDate);
-  }
-
-  return ret;
-};
-
 eventSchema.set("toJSON", {
-  virtuals: true,
-  transform: normalizeDateFields
+  virtuals: true
 });
 
 eventSchema.set("toObject", {
-  virtuals: true,
-  transform: normalizeDateFields
+  virtuals: true
 });
 
 module.exports = mongoose.model("Event", eventSchema);

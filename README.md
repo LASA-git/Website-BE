@@ -31,5 +31,10 @@ Express + MongoDB backend for LASA, modeled after CMV with a simplified feature 
 - Any event from prior years appears under Archived.
 - Event end date is auto-set to Dec 31 of the start year.
 - `startDate` must be sent as `YYYY-MM-DD` (date only).
-- Event dates are normalized and stored using UTC date semantics.
-- Event APIs return `startDate` and `endDate` as date-only strings (`YYYY-MM-DD`) to avoid timezone day shifts.
+- Event dates are stored as plain date strings (`YYYY-MM-DD`), not timestamps.
+- `13th June` is universal: `2026-06-13` remains `2026-06-13` for everyone.
+
+## Date Migration
+
+- Run `npm run migrate:event-dates` once after deployment to convert existing event records from timestamp values to string dates.
+- The migration is idempotent and safe to run multiple times.

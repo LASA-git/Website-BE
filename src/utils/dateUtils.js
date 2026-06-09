@@ -2,13 +2,7 @@ const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const pad2 = (value) => String(value).padStart(2, "0");
 
-const parseDateOnlyToUtcDate = (value) => {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return new Date(
-      Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate())
-    );
-  }
-
+const normalizeDateOnlyString = (value) => {
   if (typeof value !== "string") {
     return null;
   }
@@ -24,7 +18,6 @@ const parseDateOnlyToUtcDate = (value) => {
   const day = Number(dayRaw);
 
   const parsed = new Date(Date.UTC(year, month - 1, day));
-
   if (
     parsed.getUTCFullYear() !== year ||
     parsed.getUTCMonth() !== month - 1 ||
@@ -33,39 +26,59 @@ const parseDateOnlyToUtcDate = (value) => {
     return null;
   }
 
-  return parsed;
+  return `${yearRaw}-${monthRaw}-${dayRaw}`;
 };
 
-const formatDateOnlyUTC = (value) => {
-  const date = value instanceof Date ? value : new Date(value);
+const isDateOnlyString = (value) => normalizeDateOnlyString(value) !== null;
 
-  if (Number.isNaN(date.getTime())) {
-    return "";
+const toDateOnlyString = (value) => {
+  const normalized = normalizeDateOnlyString(value);
+  if (normalized) {
+    return normalized;
   }
 
-  const year = date.getUTCFullYear();
-  const month = pad2(date.getUTCMonth() + 1);
-  const day = pad2(date.getUTCDate());
+  const parsed =
+    value instanceof Date ? value : typeof value === "string" ? new Date(value) : null;
+
+  if (!(parsed instanceof Date) || Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  const year = parsed.getUTCFullYear();
+  const month = pad2(parsed.getUTCMonth() + 1);
+  const day = pad2(parsed.getUTCDate());
 
   return `${year}-${month}-${day}`;
 };
 
-const getCurrentUTCYear = () => new Date().getUTCFullYear();
-
-const getStartOfUTCToday = () => {
+const getCurrentUTCDateString = () => {
   const now = new Date();
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  );
+  const year = now.getUTCFullYear();
+  const month = pad2(now.getUTCMonth() + 1);
+  const day = pad2(now.getUTCDate());
+
+  return `${year}-${month}-${day}`;
 };
 
-const getYearEndUTC = (year) =>
-  new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+const getCurrentUTCYear = () => Number(getCurrentUTCDateString().slice(0, 4));
+
+const getYearFromDateOnlyString = (dateString) => {
+  const normalized = normalizeDateOnlyString(dateString);
+  if (!normalized) {
+    return null;
+  }
+
+  return Number(normalized.slice(0, 4));
+};
+
+const getYearEndDateString = (year) => `${year}-12-31`;
 
 module.exports = {
-  parseDateOnlyToUtcDate,
-  formatDateOnlyUTC,
+  normalizeDateOnlyString,
+  isDateOnlyString,
+  toDateOnlyString,
+  getCurrentUTCDateString,
   getCurrentUTCYear,
-  getStartOfUTCToday,
-  getYearEndUTC
+  getYearFromDateOnlyString,
+  getYearEndDateString
 };
