@@ -14,7 +14,8 @@ const buildFlyerPrompt = (event) => {
     `Title: ${event.title}.`,
     event.description ? `Description: ${event.description}.` : "",
     event.location ? `Venue: ${event.location}.` : "",
-    dateLabel ? `Date: ${dateLabel}.` : ""
+    dateLabel ? `Date: ${dateLabel}.` : "",
+    event.registrationLink ? `Registration URL: ${event.registrationLink}. Add a clear call to action to register.` : ""
   ].filter(Boolean);
 
   return parts.join(" ");

@@ -23,6 +23,7 @@ const createEventSchema = z.object({
     startDate: dateOnlyString,
     coverImageUrl: optionalUrl,
     gallery: z.array(z.string().url()).optional(),
+    registrationLink: optionalUrl,
     flyerUrl: optionalUrl
   })
 });
@@ -36,6 +37,7 @@ const updateEventSchema = z.object({
     startDate: dateOnlyString.optional(),
     coverImageUrl: optionalUrl,
     gallery: z.array(z.string().url()).optional(),
+    registrationLink: optionalUrl,
     flyerUrl: optionalUrl
   })
 });

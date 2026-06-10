@@ -33,6 +33,7 @@ const eventSchema = new mongoose.Schema(
     eventYear: { type: Number, required: true },
     coverImageUrl: { type: String, trim: true },
     gallery: [{ type: String, trim: true }],
+    registrationLink: { type: String, trim: true },
     flyerUrl: { type: String, trim: true },
     flyerOptions: [{ type: String, trim: true }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }
