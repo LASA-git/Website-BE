@@ -23,6 +23,7 @@ PORT=5001
 LOG_DIR="./logs"
 BRANCH="main"
 DOMAIN="loveallserveallne.org"
+API_DOMAIN="api.${DOMAIN}"
 CERT_EMAIL="admin@${DOMAIN}"
 LOG_RETENTION=5
 
@@ -196,7 +197,7 @@ if [ -n "${DOMAIN}" ]; then
   sudo bash -c "cat > ${NCONF} <<'NGCONF'
 server {
     listen 80;
-    server_name ${DOMAIN};
+    server_name ${API_DOMAIN};
 
     location / {
         proxy_pass http://127.0.0.1:${PORT};
@@ -225,9 +226,9 @@ NGCONF"
 
   # Obtain certificate
   if command -v certbot >/dev/null 2>&1; then
-    sudo certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos -m ${CERT_EMAIL} --redirect || true
+    sudo certbot --nginx -d ${API_DOMAIN} --non-interactive --agree-tos -m ${CERT_EMAIL} --redirect || true
   else
-    echo -e "${YELLOW}⚠️  certbot not available; please install certbot and run: certbot --nginx -d ${DOMAIN}${NC}"
+    echo -e "${YELLOW}⚠️  certbot not available; please install certbot and run: certbot --nginx -d ${API_DOMAIN}${NC}"
   fi
 fi
 
