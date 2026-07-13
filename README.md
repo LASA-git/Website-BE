@@ -23,6 +23,8 @@ Express + MongoDB backend for LASA, modeled after CMV with a simplified feature 
 - `POST /api/events/:id/flyer/generate` (admin)
 - `POST /api/events/:id/flyer/select` (admin)
 - `POST /api/media/presign` (admin)
+- `GET /api/activity-galleries`
+- `PUT /api/activity-galleries/:section` (admin)
 
 ## Event Behavior
 
@@ -33,6 +35,11 @@ Express + MongoDB backend for LASA, modeled after CMV with a simplified feature 
 - `startDate` must be sent as `YYYY-MM-DD` (date only).
 - Event dates are stored as plain date strings (`YYYY-MM-DD`), not timestamps.
 - `13th June` is universal: `2026-06-13` remains `2026-06-13` for everyone.
+
+## Admin Access
+
+- Public read endpoints stay open for the website.
+- Admin write endpoints require a valid Bearer JWT via `requireAuth`.
 
 ## Date Migration
 
